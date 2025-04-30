@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { FiShoppingCart, FiX, FiMenu } from 'react-icons/fi';
+import { FiShoppingCart, FiX, FiMenu, FiCheckCircle } from 'react-icons/fi';
+import toast, { Toaster } from 'react-hot-toast';
 
 const ProductCard = ({ product, addToCart }) => (
   <div className="card p-4 bg-white shadow-lg rounded-2xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border border-gray-100">
@@ -65,16 +66,59 @@ const Products = () => {
   const addToCart = (product) => {
     setCart(prevCart => [...prevCart, product]);
     setIsCartOpen(true);
+    toast.success(`${product.title} added to cart!`);
   };
 
   const removeFromCart = (productId) => {
     setCart(prevCart => prevCart.filter(item => item.id !== productId));
+    toast.error('Item removed from cart');
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
 
+  const handleCheckout = () => {
+    if (cart.length === 0) {
+      toast.error('Your cart is empty!');
+      return;
+    }
+
+    toast.promise(
+      new Promise((resolve) => {
+        // Simulate API call
+        setTimeout(() => {
+          setCart([]);
+          setIsCartOpen(false);
+          resolve();
+        }, 1500);
+      }),
+      {
+        loading: 'Processing your order...',
+        success: (
+          <div className="flex items-center gap-2">
+            <FiCheckCircle className="text-green-500" />
+            <span>Order placed successfully! Total: ${cartTotal.toFixed(2)}</span>
+          </div>
+        ),
+        error: 'Failed to process order',
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            borderRadius: '12px',
+            background: '#fff',
+            color: '#333',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      />
+
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -170,7 +214,10 @@ const Products = () => {
                       <span className="font-medium text-gray-600">Total:</span>
                       <span className="font-bold text-indigo-600">${cartTotal.toFixed(2)}</span>
                     </div>
-                    <button className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                    <button 
+                      onClick={handleCheckout}
+                      className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                    >
                       Checkout
                     </button>
                   </div>
@@ -218,7 +265,10 @@ const Products = () => {
                     <span className="font-medium text-gray-600">Total:</span>
                     <span className="font-bold text-indigo-600">${cartTotal.toFixed(2)}</span>
                   </div>
-                  <button className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                  <button 
+                    onClick={handleCheckout}
+                    className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                  >
                     Checkout
                   </button>
                 </div>
